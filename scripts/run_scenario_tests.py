@@ -59,16 +59,17 @@ def run_scenario(scenario):
                         result['passed'] = False
                         result['missing_field'] = field
                         break
-            except:
-                pass
+            except (json.JSONDecodeError, KeyError, TypeError):
+                result['passed'] = False
+                result['error'] = "Invalid JSON response format"
 
         return result
 
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         return {
             'name': name,
             'status': 'ERROR',
-            'error': str(e),
+            'error': f"Network or HTTP request failed: {e}",
             'passed': False
         }
 

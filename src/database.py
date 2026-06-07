@@ -9,7 +9,7 @@ class OracleDB:
     def __init__(self):
         self.user = os.getenv("DB_USER")
         self.password = os.getenv("DB_PASSWORD")
-        self.dsn = os.getenv("DB_DSN")  # Формат: "localhost:1521/FREEPDB1"
+        self.dsn = os.getenv("DB_DSN")
         self.connection = None
 
     def get_connection(self):
@@ -21,7 +21,7 @@ class OracleDB:
                 dsn=self.dsn
             )
             return conn
-        except Exception as e:
+        except oracledb.Error as e:
             logger.error(f"❌ Database connection error: {e}")
             return None
 
@@ -50,6 +50,8 @@ class OracleDB:
             """)
             conn.commit()
             logger.info("✅ Database initialized")
+        except oracledb.Error as e:
+            logger.error(f"❌ Database initialization query error: {e}")
         finally:
             conn.close()
 
@@ -71,7 +73,7 @@ class OracleDB:
                 result['probability']
             ))
             conn.commit()
-        except Exception as e:
+        except oracledb.Error as e:
             logger.error(f"❌ Error saving to DB: {e}")
         finally:
             conn.close()

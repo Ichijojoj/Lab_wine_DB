@@ -210,10 +210,17 @@ async def predict_batch(request: BatchPredictionRequest):
 
         return BatchPredictionResponse(predictions=results)
 
-    except Exception as e:
+    except (ValueError, KeyError) as e:
+        logger.warning(f"Validation error in batch prediction: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid payload content: {e}"
+        )
+    except RuntimeError as e:
+        logger.error(f"Runtime processing error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            detail=f"Model failed to calculate predictions: {e}"
         )
 
 
@@ -251,10 +258,17 @@ async def get_metrics():
             "test_size": metrics.get('test_size', 0),
             "feature_importance": metrics.get('feature_importance', {})
         }
-    except Exception as e:
+    except FileNotFoundError as e:
+        logger.error(f"Metrics file missing: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Metrics storage file is not available"
+        )
+    except (AttributeError, KeyError) as e:
+        logger.error(f"Metrics format is corrupted: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Could not load metrics: {str(e)}"
+            detail="Could not correctly read structured metrics"
         )
 
 
